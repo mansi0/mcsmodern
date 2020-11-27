@@ -1,0 +1,11 @@
+delimiter //
+create procedure add_prize(sno int) 
+begin
+SET max_sp_recursion_depth=255;
+IF EXISTS(SELECT 'True' FROM tot_prize WHERE sreg_no = sno) then 
+update tot_prize set no_of_prizes = no_of_prizes + 1 where sreg_no = sno; 
+else
+insert into tot_prize values(sno,1);
+end if;
+end
+//

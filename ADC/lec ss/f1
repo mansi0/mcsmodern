@@ -1,0 +1,8 @@
+delimiter //
+create function stud_name(sname varchar(20)) returns int
+begin
+declare result1 int
+select count(sreg_no) into result1 from stud_comp where year = 2011 and sreg_no in (select sreg_no from student where name = sname);
+return result1;
+end
+//

@@ -1,0 +1,1052 @@
+
+	
+					************************
+					  STUDENT-COMPETITION 
+					************************
+
+
+mysql> select * from student;
++------+-----------+-------+
+| s_no | name      | class |
++------+-----------+-------+
+|    1 | swati     | fy    |
+|    2 | satish    | sy    |
+|    3 | sati      | ty    |
+|    4 | isha      | ty    |
+|    5 | vaishnavi | ty    |
+|    6 | vaish     | sy    |
+|    7 | vikas     | fy    |
+|    8 | vimal     | sy    |
+|    9 | malini    | fy    |
++------+-----------+-------+
+9 rows in set (0.00 sec)
+
+mysql> select * from competition;
++------+---------+-----------+
+| c_no | name    | type      |
++------+---------+-----------+
+|   10 | writing | academics |
+|   20 | running | sports    |
+|   30 | essay   | academics |
+|   40 | cricket | sports    |
++------+---------+-----------+
+4 rows in set (0.00 sec)
+
+mysql> select * from student_competition;
++------+------+------+------+
+| s_no | c_no | rank | year |
++------+------+------+------+
+|    1 |   10 |    1 | 2010 |
+|    2 |   10 |    1 | 2012 |
+|    3 |   20 |    3 | 2012 |
+|    4 |   20 |    2 | 2015 |
+|    3 |   40 |    3 | 2018 |
+|    4 |   20 |    1 | 2015 |
+|    2 |   20 |    1 | 2018 |
++------+------+------+------+
+7 rows in set (0.00 sec)
+
+===================================================================================================
+					
+
+					     QUERIES
+					  *************
+						[1]
+mysql> select name from competition;
++---------+
+| name    |
++---------+
+| writing |
+| running |
+| essay   |
+| cricket |
++---------+
+4 rows in set (0.00 sec)
+
+---------------------------------------------------------------------------------------------------
+						[2]
+
+mysql> select s.name from student s inner join student_competition sc on s.s_no=sc.s_no inner join competition c on sc.c_no=c.c_no where( sc.rank=1 and c.name="running" and sc.year between 2010 and 2015);
++------+
+| name |
++------+
+| isha |
++------+
+1 row in set (0.00 sec)
+
+---------------------------------------------------------------------------------------------------
+
+						[3]
+
+mysql> select s.name ,count(*)from student_competition sc inner join student s on sc.s_no=s.s_no group by sc.s_no order by count(*)desc limit 1 ;
++-------+----------+
+| name  | count(*) |
++-------+----------+
+| swati |        3 |
++-------+----------+
+1 row in set (0.00 sec)
+
+
+
+
+---------------------------------------------------------------------------------------------------
+
+						[4]
+
+mysql> select count(name) from competition where type="sports";
++-------------+
+| count(name) |
++-------------+
+|           2 |
++-------------+
+1 row in set (0.00 sec)
+
+---------------------------------------------------------------------------------------------------
+						[5]
+
+mysql> select s.s_no,s.name,s.class, c.name ,cs.rank ,cs.year from student s inner join student_competition cs on s.s_no=cs.s_no inner join competition c on cs.c_no=c.c_no;
++------+--------+-------+---------+------+------+
+| s_no | name   | class | name    | rank | year |
++------+--------+-------+---------+------+------+
+|    1 | swati  | fy    | writing |    1 | 2010 |
+|    2 | satish | sy    | writing |    1 | 2012 |
+|    3 | sati   | ty    | running |    3 | 2012 |
+|    4 | isha   | ty    | running |    2 | 2015 |
+|    3 | sati   | ty    | cricket |    3 | 2018 |
+|    4 | isha   | ty    | running |    1 | 2015 |
+|    2 | satish | sy    | running |    1 | 2018 |
++------+--------+-------+---------+------+------+
+7 rows in set (0.00 sec)
+
+===================================================================================================
+                          
+					STORED PROCEDURES
+				     ***********************
+						[1]
+
+mysql> delimiter $$
+mysql> create procedure no_of_comp()
+    -> begin
+    -> select count(name) as academics from competition where type="academics";
+    -> select count(name) as sports from competition where type="sports";
+    -> end ;
+    -> $$
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call no_of_comp()$$
++-----------+
+| academics |
++-----------+
+|         2 |
++-----------+
+1 row in set (0.00 sec)
+
++--------+
+| sports |
++--------+
+|      2 |
++--------+
+1 row in set (0.01 sec)
+
+Query OK, 0 rows affected (0.01 sec)
+
+---------------------------------------------------------------------------------------------------
+
+						[2]
+
+mysql>  create procedure competition_year(y int)
+    -> begin
+    -> select c.name from competition c inner join student_competition sc on c.c_no=sc.c_no where sc.year=y;
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.00 sec)
+
+
+mysql> call competition_year(2010)$$
++---------+
+| name    |
++---------+
+| writing |
++---------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+
+mysql> call competition_year(2012)$$
++---------+
+| name    |
++---------+
+| writing |
+| running |
++---------+
+2 rows in set (0.00 sec)
+
+===================================================================================================
+						
+					 STORED FUNCTIONS
+				     ************************
+					
+						[1]
+
+
+mysql> create function no_of_competition( t varchar(20)) returns int
+     begin
+     declare total int;
+     select count(name) into total from competition where type=t;
+     return total;
+     end;
+     $$
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select no_of_competition("sports")$$
++-----------------------------+
+| no_of_competition("sports")
++-----------------------------+
+|                           2 |
++-----------------------------+
+1 row in set (0.02 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+						[2]
+
+
+mysql> create function prize(n varchar(20)) returns int
+    -> begin
+    -> declare no int;
+    -> select count(s.s_no) into no from student s inner join student_competition sc on s.s_no=sc.s_no where s.name= n and sc.year=2015;
+    -> return no;
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.00 sec)
+
+
+mysql> select prize("isha");
+    -> $$
++---------------+
+| prize("isha") |
++---------------+
+|             2 |
++---------------+
+1 row in set (0.00 sec)
+
+
+
+===================================================================================================
+
+
+					    CURSORS
+					***************
+
+					      [1]
+
+mysql>  create procedure cur_comp_name()
+    ->  begin
+    ->  declare done int default 0;
+    -> declare total_string varchar(1000) default "";
+    -> declare single_string varchar(50) ;
+    -> 
+    -> declare cur1 cursor for select c.name from competition c inner join student_competition sc on c.c_no=sc.c_no inner join student s on sc.s_no=s.s_no where s.class='ty' and sc.rank=1 and sc.year=2015;
+    -> 
+    -> declare continue handler for not found set done=1;
+    -> 
+    -> open cur1;
+    -> traverse : loop
+    -> fetch cur1 into single_string ;
+    -> if done=1 then
+    -> leave traverse;
+    -> end if;
+    -> set total_string= concat(single_string , "    " ,total_string);
+    -> end loop traverse;
+    -> close cur1;
+    -> select total_string; 
+    -> end$$
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call cur_comp_name()$$
++----------------------+
+| total_string         |
++----------------------+
+| essay    running     |
++----------------------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+
+
+---------------------------------------------------------------------------------------------------
+ 
+						[2]
+
+mysql> create procedure cur_comp()
+    -> begin
+    -> 
+    -> declare done int default 0;
+    -> declare stu varchar(50);
+    -> declare comp varchar(50);
+    -> declare rnk int;
+    -> declare total varchar(5000) default "";
+    -> 
+    -> declare cur cursor for select s.name , c.name , sc.rank from student s inner join student_competition sc on s.s_no=sc.s_no inner join competition c on sc.c_no=c.c_no where sc.year=2015 and (sc.rank=1 or sc.rank=2) ;
+    -> 
+    -> declare continue handler for not found
+    -> set done=1;
+    -> 
+    -> open cur;
+    -> traverse : loop
+    -> fetch cur into stu,comp,rnk;
+    -> if done then
+    -> leave traverse;
+    -> end if;
+    -> set total= concat(stu , "   " ,comp,"   ",rnk," \n" ,total);
+    -> end loop traverse;
+    -> close cur;
+    -> select total;
+    -> end$$
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call cur_comp();
+    -> $$
++------------------------------------------------------------+
+| total                                                      |
++------------------------------------------------------------+
+| sati   essay   1 
+isha   running   1 
+isha   running   2 
+ |
++------------------------------------------------------------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+
+
+===================================================================================================
+
+
+					     TRIGGERS
+					  ***************
+
+						[1]
+
+mysql> create trigger set_year before insert on student_competition for each row begin  if new.year > 2020 then set new.year=2020; end if; end;$$
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from student_competition;
+    -> $$
++------+------+------+------+
+| s_no | c_no | rank | year |
++------+------+------+------+
+|    1 |   10 |    1 | 2010 |
+|    2 |   10 |    1 | 2012 |
+|    3 |   20 |    3 | 2012 |
+|    4 |   20 |    2 | 2015 |
+|    3 |   40 |    3 | 2018 |
+|    4 |   20 |    1 | 2015 |
+|    2 |   20 |    1 | 2018 |
++------+------+------+------+
+7 rows in set (0.00 sec)
+
+
+mysql> insert into student_competition values (1,10,3,2030);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from student_competition;
++------+------+------+------+
+| s_no | c_no | rank | year |
++------+------+------+------+
+|    1 |   10 |    1 | 2010 |
+|    2 |   10 |    1 | 2012 |
+|    3 |   20 |    3 | 2012 |
+|    4 |   20 |    2 | 2015 |
+|    3 |   40 |    3 | 2018 |
+|    4 |   20 |    1 | 2015 |
+|    2 |   20 |    1 | 2018 |
+|    1 |   10 |    3 | 2020 |
++------+------+------+------+
+8 rows in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+
+						[2]
+
+mysql> create trigger increment after insert on student_competition for each row begin update tot_prize set no_of_prizes=no_of_prizes+1 where stud_reg_no=new.s_no; end$$
+Query OK, 0 rows affected (0.01 sec)
+
+
+mysql> select * from tot_prize;
++-------------+--------------+
+| stud_reg_no | no_of_prizes |
++-------------+--------------+
+|           1 |            2 |
+|           2 |            2 |
+|           3 |            2 |
+|           4 |            2 |
++-------------+--------------+
+4 rows in set (0.00 sec)
+
+mysql> insert into student_competition values(1,40,2,2000);
+Query OK, 1 row affected (0.01 sec)
+
+mysql> select * from student_competition;
++------+------+------+------+
+| s_no | c_no | rank | year |
++------+------+------+------+
+|    1 |   10 |    1 | 2010 |
+|    2 |   10 |    1 | 2012 |
+|    3 |   20 |    3 | 2012 |
+|    4 |   20 |    2 | 2015 |
+|    3 |   40 |    3 | 2018 |
+|    4 |   20 |    1 | 2015 |
+|    2 |   20 |    1 | 2018 |
+|    1 |   10 |    3 | 2020 |
+|    1 |   40 |    2 | 2000 |
++------+------+------+------+
+9 rows in set (0.00 sec)
+
+
+
+mysql> select * from tot_prize;
++-------------+--------------+
+| stud_reg_no | no_of_prizes |
++-------------+--------------+
+|           1 |            3 |
+|           2 |            2 |
+|           3 |            2 |
+|           4 |            2 |
++-------------+--------------+
+4 rows in set (0.00 sec)
+
+
+
+===================================================================================================
+
+
+					       VIEWS
+					      *******
+
+						[1]
+
+mysql> create view name_type as select name,type from competition order by type
+    -> ;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from name_type;
++---------+-----------+
+| name    | type      |
++---------+-----------+
+| writing | academics |
+| essay   | academics |
+| running | sports    |
+| cricket | sports    |
++---------+-----------+
+4 rows in set (0.00 sec)
+
+---------------------------------------------------------------------------------------------------
+
+
+						[2]
+
+mysql> create view details as select s.name 'student_name' ,s.class ,c.name ' comp_name' ,sc.rank, sc.year from student s inner join student_competition sc on s.s_no=sc.s_no inner join competition c on sc.c_no=c.c_no order by s.name;
+Query OK, 0 rows affected, 1 warning (0.00 sec)
+
+mysql> select * from details;
++--------------+-------+-----------+------+------+
+| student_name | class | comp_name | rank | year |
++--------------+-------+-----------+------+------+
+| isha         | ty    | running   |    1 | 2015 |
+| isha         | ty    | running   |    2 | 2015 |
+| sati         | ty    | cricket   |    3 | 2018 |
+| sati         | ty    | running   |    3 | 2012 |
+| satish       | sy    | running   |    1 | 2018 |
+| satish       | sy    | writing   |    1 | 2012 |
+| swati        | fy    | writing   |    3 | 2020 |
+| swati        | fy    | writing   |    1 | 2010 |
+| swati        | fy    | cricket   |    2 | 2000 |
++--------------+-------+-----------+------+------+
+9 rows in set (0.00 sec)
+
+
+===================================================================================================
+===================================================================================================
+
+				      ********************
+				      	 BANK DATABASE   
+                                      ******************** 
+
+
+mysql> select * from customer;
++------+--------+-------------+--------+
+| c_no | c_name | c_street    | city   |
++------+--------+-------------+--------+
+|    1 | sona   | fc road     | pune   |
+|    2 | mona   | baner road  | pune   |
+|    3 | monica | mg road     | mumbai |
+|    4 | rohan  | happy road  | nashik |
+|    5 | hari   | bandra road | mumbai |
+|    6 | veda   | baner road  | pune   |
++------+--------+-------------+--------+
+6 rows in set (0.00 sec)
+
+
+mysql> select * from branch;
++------+------------+--------+
+| b_no | b_name     | b_city |
++------+------------+--------+
+|  100 | aundh      | pune   |
+|  200 | camp       | pune   |
+|  300 | new mumbai | mumbai |
+|  400 | pimpri     | nashik |
+|  500 | nager      | mumbai |
++------+------------+--------+
+5 rows in set (0.00 sec)
+
+
+
+mysql> select * from account;
++--------+-----------+-----------+------+------+
+| acc_no | acc_type  | balance   | c_no | b_no |
++--------+-----------+-----------+------+------+
+|   1000 | saving    | 123445.00 |    1 |  200 |
+|   2000 | saving    |  70000.00 |    4 |  200 |
+|   3000 | recurring |   7000.00 |    3 |  100 |
+|   4000 | recurring |  17000.00 |    5 |  100 |
+|   5000 | fix       |   1000.00 |    5 |  300 |
+|   6000 | fix       |  10000.00 |    2 |  300 |
+|   7000 | fix       |  50000.00 |    1 |  400 |
+|   8000 | saving    |   5000.00 |    4 |  500 |
+|   9000 | saving    | 500000.00 |    2 |  500 |
+|  10000 | recurring | 250000.00 |    6 |  400 |
++--------+-----------+-----------+------+------+
+10 rows in set (0.00 sec)
+
+
+
+mysql> select * from loan;
++------+-----------+-------+------+------+
+| l_no | l_amt     | years | c_no | b_no |
++------+-----------+-------+------+------+
+|  500 |  60000.00 |     5 |    1 |  400 |
+|  501 |   6000.00 |     1 |    1 |  200 |
+|  502 |  16000.00 |     1 |    2 |  300 |
+|  503 | 100000.00 |     3 |    5 |  300 |
+|  504 | 500000.00 |    10 |    2 |  500 |
+|  505 |  50000.00 |     8 |    3 |  100 |
+|  506 |   8000.00 |     2 |    4 |  200 |
++------+-----------+-------+------+------+
+7 rows in set (0.00 sec)
+
+
+===================================================================================================
+
+					     QUERIES
+					  **************
+						[1]
+
+
+mysql> select c.c_name from customer c inner join loan l on c.c_no=l.c_no where l.l_amt>'10000' group by c.c_name;
++--------+
+| c_name |
++--------+
+| hari   |
+| mona   |
+| monica |
+| sona   |
++--------+
+4 rows in set (0.00 sec)
+
+---------------------------------------------------------------------------------------------------
+
+						[2]
+
+
+mysql> select c_name from customer c left outer join account a on c.c_no=a.c_no left outer join loan l on a.c_no=l.c_no where l.l_no is null;
++--------+
+| c_name |
++--------+
+| veda   |
++--------+
+1 row in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+
+						[3]
+
+mysql> select c.c_name from customer c inner join loan l on c.c_no=l.c_no inner join account a on l.c_no=a.c_no group by c.c_name; 
++--------+
+| c_name |
++--------+
+| hari   |
+| mona   |
+| monica |
+| rohan  |
+| sona   |
++--------+
+5 rows in set (0.00 sec)
+
+
+
+
+---------------------------------------------------------------------------------------------------
+
+						[4]
+
+
+mysql> select c.c_name from customer c inner join loan l on c.c_no=l.c_no inner join branch b on l.b_no=b.b_no where b_name="pimpri";
++--------+
+| c_name |
++--------+
+| sona   |
++--------+
+1 row in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+
+						[5]
+
+
+
+mysql> select c.c_no,c.c_name from customer c inner join account a on c.c_no=a.c_no where acc_type="saving" group by c.c_no;
++------+--------+
+| c_no | c_name |
++------+--------+
+|    1 | sona   |
+|    2 | mona   |
+|    4 | rohan  |
++------+--------+
+3 rows in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+
+						[6]
+
+
+mysql> select sum(l.l_amt) from loan l inner join branch b on l.b_no=b.b_no where b.b_name="nager";
++--------------+
+| sum(l.l_amt) |
++--------------+
+|    500000.00 |
++--------------+
+1 row in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+						[7]
+
+mysql> select c.c_name from customer c inner join loan l on c.c_no=l.c_no inner join branch b on l.b_no=b.b_no where c.city=b.b_city;
++--------+
+| c_name |
++--------+
+| sona   |
+| hari   |
++--------+
+2 rows in set (0.00 sec)
+
+
+===================================================================================================
+
+
+       				        STORED PROCEDURE
+				    ***********************
+
+
+						[1]
+
+mysql> select * from account;
++--------+-----------+-----------+------+------+
+| acc_no | acc_type  | balance   | c_no | b_no |
++--------+-----------+-----------+------+------+
+|   1000 | saving    | 123445.00 |    1 |  200 |
+|   2000 | saving    |  70000.00 |    4 |  200 |
+|   3000 | recurring |   7000.00 |    3 |  100 |
+|   4000 | recurring |  17000.00 |    5 |  100 |
+|   5000 | fix       |   1000.00 |    5 |  300 |
+|   6000 | fix       |  10000.00 |    2 |  300 |
+|   7000 | fix       |  50000.00 |    1 |  400 |
+|   8000 | saving    |   5000.00 |    4 |  500 |
+|   9000 | saving    | 500000.00 |    2 |  500 |
+|  10000 | recurring | 250000.00 |    6 |  400 |
++--------+-----------+-----------+------+------+
+10 rows in set (0.00 sec)
+
+mysql> delimiter $$
+mysql> 
+mysql> create procedure transfer()
+    -> begin
+    -> update account set balance=(balance-1000) where acc_no=1000;
+    -> update account set balance=(balance+1000) where acc_no=2000;
+    -> end$$
+Query OK, 0 rows affected (0.01 sec)
+
+
+mysql> delimiter ;
+mysql> call transfer();
+Query OK, 1 row affected (0.07 sec)
+
+mysql> select * from account;
++--------+-----------+-----------+------+------+
+| acc_no | acc_type  | balance   | c_no | b_no |
++--------+-----------+-----------+------+------+
+|   1000 | saving    | 122445.00 |    1 |  200 |
+|   2000 | saving    |  71000.00 |    4 |  200 |
+|   3000 | recurring |   7000.00 |    3 |  100 |
+|   4000 | recurring |  17000.00 |    5 |  100 |
+|   5000 | fix       |   1000.00 |    5 |  300 |
+|   6000 | fix       |  10000.00 |    2 |  300 |
+|   7000 | fix       |  50000.00 |    1 |  400 |
+|   8000 | saving    |   5000.00 |    4 |  500 |
+|   9000 | saving    | 500000.00 |    2 |  500 |
+|  10000 | recurring | 250000.00 |    6 |  400 |
++--------+-----------+-----------+------+------+
+10 rows in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+						
+						[2]
+
+
+mysql>  create procedure withdrawal(b float(8,2) , a_no int)
+    ->  begin
+    ->  declare amount float(8,2);
+    -> select balance into amount from account where acc_no=a_no;
+    ->  if amount>b then
+    ->  select "withdrawal allowed from account";
+    ->  update account set balance=balance-b;
+    ->  else
+    -> select "withdrawal not allowed from account";
+    -> end if;
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from account;
++--------+-----------+-----------+------+------+
+| acc_no | acc_type  | balance   | c_no | b_no |
++--------+-----------+-----------+------+------+
+|   1000 | saving    | 122445.00 |    1 |  200 |
+|   2000 | saving    |  71000.00 |    4 |  200 |
+|   3000 | recurring |   7000.00 |    3 |  100 |
+|   4000 | recurring |  17000.00 |    5 |  100 |
+|   5000 | fix       |   1000.00 |    5 |  300 |
+|   6000 | fix       |  10000.00 |    2 |  300 |
+|   7000 | fix       |  50000.00 |    1 |  400 |
+|   8000 | saving    |   5000.00 |    4 |  500 |
+|   9000 | saving    | 500000.00 |    2 |  500 |
+|  10000 | recurring | 250000.00 |    6 |  400 |
++--------+-----------+-----------+------+------+
+
+
+mysql> delimiter ;
+mysql> call withdrawal('1000',1000);
++---------------------------------+
+| withdrawal allowed from account |
++---------------------------------+
+
+1 row in set (0.00 sec)
+
+Query OK, 10 rows affected (0.02 sec)
+
+mysql> select * from account;
++--------+-----------+-----------+------+------+
+| acc_no | acc_type  | balance   | c_no | b_no |
++--------+-----------+-----------+------+------+
+|   1000 | saving    | 121445.00 |    1 |  200 |
+|   2000 | saving    |  70000.00 |    4 |  200 |
+|   3000 | recurring |   6000.00 |    3 |  100 |
+|   4000 | recurring |  16000.00 |    5 |  100 |
+|   5000 | fix       |      0.00 |    5 |  300 |
+|   6000 | fix       |   9000.00 |    2 |  300 |
+|   7000 | fix       |  49000.00 |    1 |  400 |
+|   8000 | saving    |   4000.00 |    4 |  500 |
+|   9000 | saving    | 499000.00 |    2 |  500 |
+|  10000 | recurring | 249000.00 |    6 |  400 |
++--------+-----------+-----------+------+------+
+10 rows in set (0.00 sec)
+
+
+===================================================================================================
+
+					STORED FUNCTIONS
+				     **********************
+
+						[1]
+
+      mysql> create function loan_amount(br char(50)) returns double(9,2)
+    -> begin
+    -> declare a double(9,2) ;
+    -> select sum(l.l_amt) from loan l inner join branch b on l.b_no=b.b_no where b.b_name=br;
+    -> return a ;
+    -> end;
+
+mysql> select loan_amount("new mumbai");
+    -> $$
++---------------------------+
+| loan_amount("new mumbai") |
++---------------------------+
+|                 116000.00 |
++---------------------------+
+1 row in set (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+						[2]
+
+
+    mysql> create function count_customer(br char(50)) returns int
+    ->  begin
+    -> declare n int;
+    -> select count(c.c_no) into n from customer c inner join account a on c.c_no=a.c_no inner join branch b on a.b_no=b.b_no where b.b_name=br;
+    -> return n;
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select count_customer("camp");
+    -> $$
++------------------------+
+| count_customer("camp") |
++------------------------+
+|                      2 |
++------------------------+
+1 row in set (0.00 sec)
+
+
+===================================================================================================
+
+
+					     CURSORS
+					  **************
+					
+						[1]
+
+
+mysql> create procedure cur_cname ()
+    -> begin
+    -> declare done int default 0;
+    -> declare cname varchar(50);
+    -> declare total varchar(1000) default "";
+    -> declare cur2 cursor for  select c.c_name from customer c  inner join loan l on c.c_no=l.c_no inner join branch b on l.b_no=b.b_no where b.b_name="camp" and l_amt between 4000 and 9000;
+    -> declare continue handler for not found set done=1;
+    -> 
+    -> open cur2;
+    -> traverse : loop
+    -> fetch cur2 into cname;
+    -> if done then
+    -> leave traverse;
+    -> end if;
+    -> 
+    -> set total=concat(total,"\n ",cname );
+    -> end loop traverse;
+    -> close cur2;
+    -> select total;
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> call cur_cname();
+    -> $$
++---------------+
+| total         |
++---------------+
+| 
+ sona
+ rohan |
++---------------+
+1 row in set (0.00 sec)
+
+Query OK, 0 rows affected (0.00 sec)
+
+
+---------------------------------------------------------------------------------------------------
+
+
+						[2]
+
+
+
+mysql> create procedure interest()
+    -> begin
+    -> declare done int default 0;
+    -> declare bal float(8,2);
+    -> declare ano int;
+    -> declare cur4 cursor for select acc_no,balance from account;
+    -> declare continue handler for not found set done=1;
+    -> 
+    -> open cur4;
+    -> traverse:loop
+    -> fetch cur4 into ano,bal;
+    -> if done then
+    -> leave traverse;
+    -> end if;
+    -> if bal>5000 then
+    -> update account set balance=bal+((bal*3)/100) where acc_no=ano;
+    -> end if;
+    -> end loop traverse;
+    -> close cur4;
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from account$$
++--------+-----------+-----------+------+------+
+| acc_no | acc_type  | balance   | c_no | b_no |
++--------+-----------+-----------+------+------+
+|   1000 | saving    | 121335.70 |    1 |  200 |
+|   2000 | saving    |  69937.00 |    4 |  200 |
+|   3000 | recurring |   5994.60 |    3 |  100 |
+|   4000 | recurring |  15985.60 |    5 |  100 |
+|   5000 | fix       |      0.00 |    5 |  300 |
+|   6000 | fix       |   8991.90 |    2 |  300 |
+|   7000 | fix       |  48955.90 |    1 |  400 |
+|   8000 | saving    |   4000.00 |    4 |  500 |
+|   9000 | saving    | 498550.91 |    2 |  500 |
+|  10000 | recurring | 248775.91 |    6 |  400 |
++--------+-----------+-----------+------+------+
+10 rows in set (0.00 sec)
+
+mysql> call interest()$$
+Query OK, 0 rows affected (0.03 sec)
+
+mysql> select * from account$$
++--------+-----------+-----------+------+------+
+| acc_no | acc_type  | balance   | c_no | b_no |
++--------+-----------+-----------+------+------+
+|   1000 | saving    | 124975.77 |    1 |  200 |
+|   2000 | saving    |  72035.11 |    4 |  200 |
+|   3000 | recurring |   6174.44 |    3 |  100 |
+|   4000 | recurring |  16465.17 |    5 |  100 |
+|   5000 | fix       |      0.00 |    5 |  300 |
+|   6000 | fix       |   9261.66 |    2 |  300 |
+|   7000 | fix       |  50424.58 |    1 |  400 |
+|   8000 | saving    |   4000.00 |    4 |  500 |
+|   9000 | saving    | 513507.44 |    2 |  500 |
+|  10000 | recurring | 256239.19 |    6 |  400 |
++--------+-----------+-----------+------+------+
+10 rows in set (0.00 sec)
+
+
+
+
+===================================================================================================
+
+					     TRIGGERS
+					  **************
+
+						[1]
+
+mysql> create trigger check_account_no before insert on account for each row 
+    -> begin
+    -> declare msg varchar(200);
+    -> if  new.acc_no <0 then 
+    -> set msg="  Account no can not be less than 0  " ;
+    -> signal sqlstate '02000' set message_text = msg;
+    -> end if;
+    -> end;
+    -> $$
+Query OK, 0 rows affected (0.02 sec)
+
+mysql> delimiter ;
+mysql> 
+mysql> insert into account values(-11 , 'fix' ,'39475' , 6,100);
+ERROR 1643 (02000):   Account no can not be less than 0  
+
+---------------------------------------------------------------------------------------------------
+
+						[2]
+
+mysql> create trigger update_loan2 before update on loan for each row
+    -> begin
+    -> declare msg varchar(100);
+    -> if new.l_amt!=old.l_amt then
+    -> set msg="loan amount once given can not be updated"; 
+    -> signal sqlstate '03000' set message_text=msg;
+    -> end if;
+    -> end;$$
+Query OK, 0 rows affected (0.01 sec)
+
+
+mysql> update loan set l_amt =90 where l_no=501;
+    -> $$
+ERROR 1644 (03000): loan amount once given can not be updated
+
+
+===================================================================================================
+
+
+						VIEWS
+					    *************	
+
+						[1]
+
+
+mysql> create view customer_details as select c.c_no , c.c_name ,c.c_street ,c.city,a.acc_no,a.acc_type , a.balance , b.b_name  from customer c inner join account a on c.c_no=a.c_no inner join branch b on a.b_no =b.b_no ;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from customer_details;
++------+--------+-------------+--------+--------+-----------+-----------+---------------+
+| c_no | c_name | c_street    | city   | acc_no | acc_type  | balance   | b_name        |
++------+--------+-------------+--------+--------+-----------+-----------+---------------+
+|    1 | sona   | fc road     | pune   |   1000 | saving    | 121445.00 | camp          |
+|    4 | rohan  | happy road  | nashik |   2000 | saving    |  70000.00 | camp          |
+|    3 | monica | mg road     | mumbai |   3000 | recurring |   6000.00 | sadashiv peth |
+|    5 | hari   | bandra road | mumbai |   4000 | recurring |  16000.00 | sadashiv peth |
+|    5 | hari   | bandra road | mumbai |   5000 | fix       |      0.00 | new mumbai    |
+|    2 | mona   | baner road  | pune   |   6000 | fix       |   9000.00 | new mumbai    |
+|    1 | sona   | fc road     | pune   |   7000 | fix       |  49000.00 | pimpri        |
+|    4 | rohan  | happy road  | nashik |   8000 | saving    |   4000.00 | nager         |
+|    2 | mona   | baner road  | pune   |   9000 | saving    | 499000.00 | nager         |
+|    6 | veda   | baner road  | pune   |  10000 | recurring | 249000.00 | pimpri        |
++------+--------+-------------+--------+--------+-----------+-----------+---------------+
+10 rows in set (0.01 sec)
+
+
+
+mysql> create view customer_details2 as select c.c_no , c.c_name ,c.c_street ,c.city,a.acc_no,a.acc_type , a.balance , b.b_name  from customer c left outer join account a on c.c_no=a.c_no left outer join branch b on a.b_no =b.b_no where c_name="hari";
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> select * from customer_details2;
++------+--------+-------------+--------+--------+-----------+----------+---------------+
+| c_no | c_name | c_street    | city   | acc_no | acc_type  | balance  | b_name        |
++------+--------+-------------+--------+--------+-----------+----------+---------------+
+|    5 | hari   | bandra road | mumbai |   4000 | recurring | 16465.17 | sadashiv peth |
+|    5 | hari   | bandra road | mumbai |   5000 | fix       |     0.00 | new mumbai    |
++------+--------+-------------+--------+--------+-----------+----------+---------------+
+2 rows in set (0.00 sec)
+
+
+
+---------------------------------------------------------------------------------------------------
+
+						[2]
+
+
+mysql> create view branch_loan as select l.l_no'loan number' , l.l_amt'loan amount' ,l.years'loan duration', l.c_no 'customer number' , b.b_name'branch name' ,b.b_city'branch city' from loan l inne
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> select * from branch_loan;
++-------------+-------------+---------------+-----------------+---------------+-------------+
+| loan number | loan amount | loan duration | customer number | branch name   | branch city |
++-------------+-------------+---------------+-----------------+---------------+-------------+
+|         505 |    50000.00 |             8 |               3 | sadashiv peth | pune        |
++-------------+-------------+---------------+-----------------+---------------+-------------+
+1 row in set (0.00 sec)
+
+
+===================================================================================================
+===================================================================================================
+

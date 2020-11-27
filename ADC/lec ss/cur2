@@ -1,0 +1,20 @@
+delimiter //
+create procedure print_cname_rank()
+begin
+declare done int default 0;
+declare a1 varchar(20) ;
+
+declare cur1 cursor for select compitition.name from compitition , stud_comp where compitition.c_no = stud_comp.c_no and year = 2011 and (crank = 1 or crank = 2);
+
+declare continue handler for SQLSTATE '02000' set done = 1;
+open cur1;
+repeat
+fetch cur1 into a1;
+if not done then
+select a1;
+end if;
+until done
+end repeat;
+close cur1;
+end //
+

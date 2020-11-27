@@ -1,0 +1,85 @@
+delimiter //
+create procedure print_records()
+begin
+declare done int default 0;
+declare a1 int;
+declare b1 float;
+declare c1 text;
+declare cur1 cursor for select a,b,c from test;
+declare continue handler for SQLSTATE''02000' set done =1;
+open cur1;
+repeat
+fetch cur1 into a1,b1,c1;
+if not done then 
+select a1,b1,c1;
+end if;
+until done 
+end repeat;
+close cur1;
+end//
+
+1]
+delimiter //
+create procedure print_records()
+begin
+declare done int default 0;
+declare a1 int;
+declare b1 text;
+declare cur1 cursor for select * from test;
+declare continue handler for SQLSTATE''02000' set done =1;
+open cur1;
+repeat
+ fetch cur1 into a1,b1;
+ if not done then 
+ select a1,b1;
+ end if;
+until done
+ end repeat;
+close cur1;
+end//
+
+
+
+
+
+
+
+
+
+
+
+
+
+delimiter //
+create procedure print_records()
+begin
+declare done int default 0;
+declare a1 int;
+declare b1 float;
+declare c1 text;
+declare cur1 cursor for select a,b from test1;
+declare cur1 cursor for select c from test1;
+declare continue handler for SQLSTATE''02000' set done =1;
+open cur1;
+open cur 2;
+repeat
+fetch cur1 into a1,b1;
+fetch cur1 into c1;
+if not done then 
+insert into t1 values(a1,b1);
+insert into t2 values(c1);
+end if;
+until done 
+end repeat;
+close cur1;
+end//
+
+
+
+
+
+
+
+
+
+

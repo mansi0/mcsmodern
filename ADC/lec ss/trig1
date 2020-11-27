@@ -1,0 +1,9 @@
+Delimiter //
+Create trigger t1 before insert on stud_comp for each row
+Begin
+If new.year > year(current_date()) then
+Set new.year= year(current_date());
+End if;
+End
+//
+

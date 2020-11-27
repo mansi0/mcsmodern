@@ -1,0 +1,6 @@
+delimiter //
+create trigger t5 after insert on stud_comp for each row
+begin
+call add_prize(new.sreg_no);
+end
+//
