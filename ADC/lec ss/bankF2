@@ -1,0 +1,10 @@
+delimiter //
+create function countCust(name varchar(20)) returns int
+deterministic
+begin
+declare i int ;
+select count(cust_no) into i from acc , branch where acc.branch_no = branch.branch_no and branch_name = name;
+return i;
+end
+//
+

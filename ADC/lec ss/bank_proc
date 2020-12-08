@@ -1,0 +1,13 @@
+delimiter //
+create procedure withdrawal (b float , ano int )
+begin 
+declare a int;
+select balance as a from acc where acc_no = ano;
+if a < b then 
+select "withdrawal allowed from account ";
+update acc set balance = balance - b where acc_no = ano;
+
+else 
+select "withdrawal not allowed from account";
+end if;
+end //

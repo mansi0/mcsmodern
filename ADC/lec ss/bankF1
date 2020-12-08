@@ -1,0 +1,11 @@
+delimiter //
+create function loanSum(name varchar(20)) returns float
+deterministic
+begin
+declare s float ;
+select sum(loan_amt) into s from loan , branch where branch.branch_no =
+loan.branch_no and branch_name = name;
+return s;
+end
+//
+
