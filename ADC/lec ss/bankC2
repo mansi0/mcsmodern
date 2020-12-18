@@ -1,0 +1,24 @@
+delimiter //
+create procedure C2()
+begin
+declare done int default 0;
+declare bal float;
+declare account_no int;
+declare cur1 cursor for select balance from acc where balance > 5000;
+declare cur2 cursor for select acc_no from acc where balance > 5000;
+declare continue handler for SQLSTATE '02000' set done = 1;
+open cur1;
+open cur2;
+repeat
+fetch cur1 into bal;
+fetch cur2 into account_no;
+if not done then
+set bal = (bal * 3 * 0.01) + bal;
+update acc set balance = bal where acc_no = account_no;
+select account_no, bal;
+end if;
+until done
+end repeat;
+close cur1;
+close cur2;
+end //
